@@ -7,9 +7,6 @@ from openai import OpenAI
 from dotenv import load_dotenv
 
 def create_system_prompt():
-    """
-    Creates the system prompt for the OpenAI API to guide the conversion process.
-    """
     return """
 You are an expert Scratch to Python converter. Your task is to convert a Scratch project's `project.json` into a single, executable Python file using the Pygame library.
 
@@ -47,9 +44,6 @@ You are an expert Scratch to Python converter. Your task is to convert a Scratch
 """
 
 def convert_sb3_to_pygame(sb3_path, output_path):
-    """
-    Converts an .sb3 file to a Pygame project.
-    """
     load_dotenv()
     api_key = os.getenv("API_KEY")
     base_url = os.getenv("API_BASE")
@@ -61,17 +55,14 @@ def convert_sb3_to_pygame(sb3_path, output_path):
 
     client = OpenAI(api_key=api_key, base_url=base_url)
 
-    # 1. Extract project.json and assets from .sb3 file
     try:
         with zipfile.ZipFile(sb3_path, 'r') as archive:
             project_json_str = archive.read('project.json').decode('utf-8')
             
-            # Create output directory if it doesn't exist
             os.makedirs(output_path, exist_ok=True)
             assets_path = os.path.join(output_path, 'assets')
             os.makedirs(assets_path, exist_ok=True)
 
-            # Extract all assets
             for file_info in archive.infolist():
                 if file_info.filename != 'project.json':
                     archive.extract(file_info, assets_path)
@@ -80,7 +71,6 @@ def convert_sb3_to_pygame(sb3_path, output_path):
         print(f"Error reading or processing sb3 file: {e}", file=sys.stderr)
         sys.exit(1)
 
-    # 2. Send to OpenAI for conversion
     print("Sending project.json to AI for conversion...")
     try:
         response = client.chat.completions.create(
@@ -95,7 +85,6 @@ def convert_sb3_to_pygame(sb3_path, output_path):
         print(f"Error communicating with OpenAI API: {e}", file=sys.stderr)
         sys.exit(1)
 
-    # 3. Save the generated Python file
     output_file_path = os.path.join(output_path, 'main.py')
     with open(output_file_path, 'w', encoding='utf-8') as f:
         f.write(pygame_code)
